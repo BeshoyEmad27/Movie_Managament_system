@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CineVault — Movie Management</title>
+  <meta name="description" content="Movie management system — browse, favourite, and review films."/>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+
+  <!--
+    Spring Boot static resource path:
+    src/main/resources/static/css/style.css
+  -->
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+<!-- ======================================================
+     NAVBAR
+     Spring Boot serves this file from /static/index.html
+     ====================================================== -->
+<nav class="navbar">
+  <div class="navbar__logo">
+    🎬 CineVault
+    <span>Movie Management System</span>
+  </div>
+
+  <div class="navbar__nav">
+    <button class="navbar__nav-btn active" data-page="browse">🎬 Browse</button>
+    <button class="navbar__nav-btn" data-page="favourites">❤️ Favourites</button>
+    <button class="navbar__nav-btn" data-page="admin">⚙️ Admin</button>
+  </div>
+
+  <div class="navbar__user" title="View profile — GET /api/auth/me">
+    <div class="navbar__avatar">JD</div>
+    <span class="navbar__username" id="navbar-username">John Doe</span>
+    <span class="navbar__caret">▾</span>
+    <!-- User Dropdown Menu -->
+    <div class="navbar__dropdown" id="navbar-dropdown" style="display:none; position:absolute; top:60px; right:0; background:white; border:1px solid #e0e0e0; border-radius:8px; min-width:200px; box-shadow:0 2px 8px rgba(0,0,0,0.1); z-index:100;">
+      <button id="logout-btn" style="display:block; width:100%; padding:12px 16px; text-align:left; border:none; background:none; cursor:pointer; font-size:14px; color:#d32f2f; border-top:1px solid #e0e0e0;">
+        🚪 Logout
+      </button>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ======================================================
+     PAGE: BROWSE
+     Spring Boot: GET /api/movies
+     ====================================================== -->
+<main id="page-browse" class="page active">
+
+  <!-- Search + Filters -->
+  <div class="section" style="padding-bottom:0;">
+    <div id="search-bar" class="search-bar">
+      <span class="search-bar__icon">🔍</span>
+      <input
+        type="text"
+        id="search-input"
+        class="search-bar__input"
+        placeholder="Search by title, director, or genre…"
+        autocomplete="off"
+        aria-label="Search movies"
+      />
+      <!-- Dropdown results: GET /api/movies/search?title=... -->
+      <div class="search-bar__dropdown" id="search-dropdown" role="listbox"></div>
+    </div>
+
+    <!-- Genre chips: GET /api/movies/genres  -->
+    <div class="filter-chips" id="genre-chips">
+      <div class="chip active" data-genre="All">All Genres</div>
+      <div class="chip" data-genre="Action">Action</div>
+      <div class="chip" data-genre="Drama">Drama</div>
+      <div class="chip" data-genre="Sci-Fi">Sci-Fi</div>
+      <div class="chip" data-genre="Horror">Horror</div>
+      <div class="chip" data-genre="Comedy">Comedy</div>
+      <div class="chip" data-genre="Thriller">Thriller</div>
+      <div class="chip" data-genre="Animation">Animation</div>
+    </div>
+  </div>
+
+  <!-- Movie grid: GET /api/movies -->
+  <div class="section">
+    <div class="section__header">
+      <h2 class="section__title">Featured Films</h2>
+      <button class="section__link">View all →</button>
+    </div>
+    <div class="movie-grid" id="browse-grid">
+      <!-- Populated by browse.js -->
+    </div>
+  </div>
+
+</main>
+
+
+<!-- ======================================================
+     PAGE: FAVOURITES
+     Spring Boot: GET /api/favourites
+     ====================================================== -->
+<main id="page-favourites" class="page">
+  <div class="section">
+    <div class="section__header">
+      <h2 class="section__title">My Favourites</h2>
+      <span style="font-size:13px;color:var(--text3);" id="fav-count">0 movies</span>
+    </div>
+
+    <!-- Populated by favourites.js -->
+    <div class="movie-grid" id="fav-grid" style="display:none;"></div>
+
+    <div id="fav-empty" class="empty-state">
+      <span class="empty-state__icon">🎞️</span>
+      <p class="empty-state__title">No favourites yet</p>
+      <p class="empty-state__sub">Browse films and tap ❤️ to save them here.<br/>
+        <span style="font-family:monospace;font-size:11px;color:var(--text3);">POST /api/favourites/{movieId}</span>
+      </p>
+    </div>
+  </div>
+</main>
+
+
+<!-- ======================================================
+     PAGE: ADMIN PANEL
+     Spring Boot: /api/admin, /api/movies, /api/users, /api/reviews
+     ====================================================== -->
+<main id="page-admin" class="page">
+  <div class="admin-layout">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <span class="admin-sidebar__label">Dashboard</span>
+      <button class="admin-nav-item active" data-tab="overview">
+        <span class="admin-nav-item__icon">📊</span> Overview
+      </button>
+      <button class="admin-nav-item" data-tab="movies">
+        <span class="admin-nav-item__icon">🎬</span> Movies
+      </button>
+      <button class="admin-nav-item" data-tab="users">
+        <span class="admin-nav-item__icon">👥</span> Users
+      </button>
+      <button class="admin-nav-item" data-tab="reviews">
+        <span class="admin-nav-item__icon">⭐</span> Reviews
+      </button>
+
+      <span class="admin-sidebar__label">Spring Boot REST API</span>
+      <div class="api-docs">
+        <div class="api-endpoint">
+          <span class="api-method method-get">GET</span>
+          <span class="api-endpoint__path">/api/movies</span>
+        </div>
+        <div class="api-endpoint">
+          <span class="api-method method-post">POST</span>
+          <span class="api-endpoint__path">/api/movies</span>
+        </div>
+        <div class="api-endpoint">
+          <span class="api-method method-put">PUT</span>
+          <span class="api-endpoint__path">/api/movies/{id}</span>
+        </div>
+        <div class="api-endpoint">
+          <span class="api-method method-delete">DELETE</span>
+          <span class="api-endpoint__path">/api/movies/{id}</span>
+        </div>
+        <div class="api-endpoint" style="margin-top:8px;">
+          <span class="api-method method-get">GET</span>
+          <span class="api-endpoint__path">/api/users</span>
+        </div>
+        <div class="api-endpoint">
+          <span class="api-method method-post">POST</span>
+          <span class="api-endpoint__path">/api/users</span>
+        </div>
+        <div class="api-endpoint">
+          <span class="api-method method-put">PUT</span>
+          <span class="api-endpoint__path">/api/users/{id}</span>
+        </div>
+        <div class="api-endpoint">
+          <span class="api-method method-delete">DELETE</span>
+          <span class="api-endpoint__path">/api/users/{id}</span>
+        </div>
+        <div class="api-endpoint" style="margin-top:8px;">
+          <span class="api-method method-get">GET</span>
+          <span class="api-endpoint__path">/api/reviews</span>
+        </div>
+        <div class="api-endpoint">
+          <span class="api-method method-delete">DELETE</span>
+          <span class="api-endpoint__path">/api/reviews/{id}</span>
+        </div>
+        <div class="api-endpoint">
+          <span class="api-method method-put">PUT</span>
+          <span class="api-endpoint__path">/api/reviews/{id}/status</span>
+        </div>
+        <div class="api-endpoint" style="margin-top:8px;">
+          <span class="api-method method-post">POST</span>
+          <span class="api-endpoint__path">/api/favourites/{id}</span>
+        </div>
+        <div class="api-endpoint">
+          <span class="api-method method-delete">DELETE</span>
+          <span class="api-endpoint__path">/api/favourites/{id}</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Admin content -->
+    <div class="admin-content">
+
+      <!-- TAB: Overview -->
+      <div id="admin-tab-overview" class="admin-tab-page">
+        <div class="admin-page-header">
+          <h2 class="admin-page-title">Overview</h2>
+          <span style="font-size:13px;color:var(--text3);">GET /api/admin/stats</span>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-card__label">Total Movies</div>
+            <div class="stat-card__value" style="color:var(--accent);" id="stat-movies">—</div>
+            <div class="stat-card__sub"><span class="stat-up">↑ 12</span> this month</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card__label">Registered Users</div>
+            <div class="stat-card__value" style="color:var(--blue);" id="stat-users">—</div>
+            <div class="stat-card__sub"><span class="stat-up">↑ 87</span> this month</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card__label">Total Reviews</div>
+            <div class="stat-card__value" style="color:var(--green);" id="stat-reviews">—</div>
+            <div class="stat-card__sub"><span class="stat-up">↑ 342</span> this month</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card__label">Avg. Rating</div>
+            <div class="stat-card__value" style="color:var(--accent);" id="stat-rating">—</div>
+            <div class="stat-card__sub">★ across all films</div>
+          </div>
+        </div>
+        <div class="activity-feed">
+          <p class="activity-feed__title">Recent Activity — GET /api/admin/activity</p>
+          <div id="activity-feed">
+            <!-- Populated by admin.js -->
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: Movies -->
+      <div id="admin-tab-movies" class="admin-tab-page" style="display:none;">
+        <div class="admin-page-header">
+          <h2 class="admin-page-title">Movies</h2>
+          <button class="btn btn-primary" onclick="AdminPage.addMovieModal()">+ Add Movie</button>
+        </div>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Movie</th>
+                <th>Genre</th>
+                <th>Year</th>
+                <th>Rating</th>
+                <th>Duration</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="movies-table-body">
+              <!-- Populated by admin.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB: Users -->
+      <div id="admin-tab-users" class="admin-tab-page" style="display:none;">
+        <div class="admin-page-header">
+          <h2 class="admin-page-title">Users</h2>
+          <button class="btn btn-primary" onclick="AdminPage.addUserModal()">+ Add User</button>
+        </div>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Joined</th>
+                <th>Favourites</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-table-body">
+              <!-- Populated by admin.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB: Reviews -->
+      <div id="admin-tab-reviews" class="admin-tab-page" style="display:none;">
+        <div class="admin-page-header">
+          <h2 class="admin-page-title">Reviews</h2>
+          <span style="font-size:13px;color:var(--text3);">GET /api/reviews</span>
+        </div>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Movie</th>
+                <th>Rating</th>
+                <th>Review</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="reviews-table-body">
+              <!-- Populated by admin.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /admin-content -->
+  </div><!-- /admin-layout -->
+</main>
+
+
+<!-- ======================================================
+     SHARED: Detail Slide Panel
+     ====================================================== -->
+<aside class="detail-panel" id="detail-panel" aria-label="Movie details">
+  <button class="detail-panel__close" id="detail-panel-close" aria-label="Close panel">✕</button>
+  <div id="detail-panel-body">
+    <!-- Populated by browse.js / favourites.js -->
+  </div>
+</aside>
+
+
+<!-- ======================================================
+     SHARED: Modal
+     ====================================================== -->
+<div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true">
+  <div class="modal" id="modal-dialog">
+    <div id="modal-content">
+      <!-- Populated dynamically -->
+    </div>
+  </div>
+</div>
+
+
+<!-- ======================================================
+     SHARED: Toast Notification
+     ====================================================== -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+
+<!-- ======================================================
+     SCRIPTS
+     Spring Boot static resource order matters:
+       1. api.js      — HTTP layer (no DOM)
+       2. app.js      — State, Router, shared utilities
+       3. browse.js   — Browse page logic
+       4. favourites.js
+       5. admin.js
+     ====================================================== -->
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+<script src="js/browse.js"></script>
+<script src="js/favourites.js"></script>
+<script src="js/admin.js"></script>
+
+</body>
+</html>
