@@ -1,27 +1,34 @@
 package com.example.movies.moviemanagement.entity;
 
+import org.hibernate.annotations.CreationTimestamp;
+
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-
-// import jakarta.validation.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 
 @Entity
 
 public class movie {
     public movie() {
-        // TODO Auto-generated method stub
     }
-@Id
-@GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    // @NotBlank
-    private String title;
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    @NotBlank
+    @Column(nullable = false, unique = true)
+    private String title;
+    @Column(columnDefinition = "TEXT")
     private String description;
+    @CreationTimestamp
+    @Column(updatable = false)
     private String releaseDate;
+    @Column(nullable = false)
     private String genre;
+
     // Getters and Setters
     public Long getId() {
         return id;
@@ -62,6 +69,5 @@ public class movie {
     public void setGenre(String genre) {
         this.genre = genre;
     }
-
 
 }
